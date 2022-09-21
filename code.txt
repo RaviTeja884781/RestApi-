@@ -1,0 +1,98 @@
+const express = require('express');
+const router = express.Router();
+
+const employeeModel = require('../models/employee-model');
+
+router.use(express.json());
+
+// CREATE
+
+    router.post('/',async (req,res)=>{
+        const newEmployee = new employeeModel({
+            name:req.body.name,
+            salary:req.body.salary,
+            department:req.body.department,
+            location:req.body.location
+        })
+        try{
+           let createdEmployee = await newEmployee.save()
+           res.status(201).json({message:"profile created successully",details:createdEmployee})
+        } catch(err){
+            res.status(400).json({message:err.message})
+        }
+    })
+
+// READ
+
+// All Employees
+
+    router.get('/',async (req,res)=>{
+        try{
+        let allEmployees = await employeeModel.find()
+        res.status(200).json(allEmployees);
+
+        } catch(err){
+            res.status(500).json({message:err.message})
+        }
+
+    })
+
+// One Employee
+
+router.get('/:id',getEmployee,(req,res)=>{
+    res.send(res.employee);
+})
+
+// UPDATE
+
+router.patch('/:id',getEmployee,async (req,res)=>{
+    if(req.body.name != null){
+        res.employee.name = req.body.name ;
+    }
+    if(req.body.salary != null){
+        res.employee.salary = req.body.salary ;
+    }
+    if(req.body.department != null){
+        res.employee.department = req.body.department ;
+    }
+    if(req.body.location != null){
+        res.employee.location = req.body.location ;
+    }
+
+    try{
+       let updatedEmployee = await res.employee.save()
+       res.send(updatedEmployee)
+    }catch(err){
+        res.status(400).json({message:err.message})
+    }
+})
+
+// DELETE
+
+router.delete('/:id',getEmployee,async (req,res)=>{
+    try{
+        await res.employee.remove()
+        res.send({message:"Profile delted successfully"})
+
+    } catch(err){
+        res.status(500).json({message:err.message})
+    }
+
+})
+
+async function getEmployee(req,res,next){
+    try{
+      var employee = await employeeModel.findById(req.params.id)
+      if(employee == null){
+        res.status(404).json({message:"Employee not found"})
+      }
+    }
+    catch (err){
+        res.status(500).json({message:err.message})
+    }
+    res.employee = employee;
+    next()
+}
+
+
+module.exports = router;
